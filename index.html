@@ -3,107 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Somador de Boletos Pro</title>
+    <title>Somador de Boletos Pro Max</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script>
-        // Configuração vital para o PDF.js funcionar online
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: { brand: { 50: '#f0f9ff', 500: '#0ea5e9', 600: '#0284c7', 900: '#0c4a6e' } }
-                }
-            }
-        }
+        tailwind.config = { theme: { extend: { colors: { brand: { 50: '#f0f9ff', 500: '#0ea5e9', 900: '#0c4a6e' } } } } }
     </script>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
 
-    <nav class="bg-brand-900 text-white shadow-lg flex-none">
-        <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <div class="bg-brand-500 p-2 rounded-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                </div>
-                <h1 class="text-xl font-bold tracking-tight">Somador <span class="text-brand-500">Inteligente</span></h1>
-            </div>
-            <button onclick="exportarExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2 shadow-md">
-                Exportar Excel
+    <nav class="bg-brand-900 text-white shadow-lg p-4">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold flex items-center gap-2">
+                <span class="bg-brand-500 p-1.5 rounded text-white">📑</span> Somador Pro Max
+            </h1>
+            <button onclick="exportarExcel()" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2">
+                📥 Exportar Excel
             </button>
         </div>
     </nav>
 
-    <main class="max-w-5xl mx-auto px-4 py-8 space-y-8 flex-grow w-full">
+    <main class="max-w-6xl mx-auto px-4 py-8 space-y-6 w-full flex-grow">
         
-        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div id="drop-zone" class="p-10 text-center transition-all cursor-pointer hover:bg-slate-50 relative group">
-                <input type="file" id="file-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="application/pdf" multiple>
-                
-                <div id="upload-ui" class="space-y-4">
-                    <div class="mx-auto w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center text-brand-600 group-hover:scale-110 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-semibold text-slate-700">Arraste seus boletos</h2>
-                        <p class="text-slate-500 text-sm">PDFs Digitais ou Imagens (OCR)</p>
-                    </div>
+        <section id="drop-zone" class="bg-white rounded-2xl border-2 border-dashed border-slate-300 p-10 text-center hover:border-brand-500 transition-all cursor-pointer relative group">
+            <input type="file" id="file-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="application/pdf, image/*" multiple>
+            <div id="upload-ui" class="space-y-2">
+                <p class="text-lg font-semibold text-slate-700">Arraste seus arquivos (PDF ou Imagens)</p>
+                <p class="text-slate-400 text-sm">Suporte a Boletos Escaneados, Fotos e PDFs Digitais</p>
+            </div>
+            <div id="progress-ui" class="hidden space-y-3">
+                <div class="flex justify-between text-xs font-bold text-brand-600 uppercase">
+                    <span id="progress-text">Lendo arquivos...</span>
+                    <span id="progress-percent">0%</span>
                 </div>
-
-                <div id="progress-ui" class="hidden space-y-4 py-4">
-                    <div class="flex justify-between text-sm font-medium text-slate-600">
-                        <span id="progress-text">Processando...</span>
-                        <span id="progress-percent">0%</span>
-                    </div>
-                    <div class="w-full bg-slate-100 rounded-full h-4 overflow-hidden">
-                        <div id="progress-bar" class="bg-brand-500 h-full w-0 transition-all duration-300"></div>
-                    </div>
-                    <p id="current-file-name" class="text-xs text-slate-400 italic truncate"></p>
+                <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                    <div id="progress-bar" class="bg-brand-500 h-full w-0 transition-all duration-300"></div>
                 </div>
             </div>
         </section>
 
-        <div class="grid md:grid-cols-3 gap-8">
-            <div class="md:col-span-2 space-y-4">
-                <div class="flex items-center justify-between">
-                    <h3 class="font-bold text-slate-700">Arquivos (<span id="count-badge">0</span>)</h3>
-                    <button onclick="limparTudo()" class="text-xs text-red-500 hover:underline">Limpar</button>
-                </div>
+        <div class="grid lg:grid-cols-4 gap-6">
+            <div class="lg:col-span-3 space-y-4">
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                     <table class="w-full text-sm text-left">
-                        <thead class="bg-slate-50 text-slate-500 font-semibold border-b">
-                            <tr><th class="p-4">Arquivo</th><th class="p-4 text-center">Método</th><th class="p-4 text-right">Valor</th></tr>
+                        <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-[10px] border-b">
+                            <tr>
+                                <th class="p-4">Beneficiário</th>
+                                <th class="p-4">Vencimento</th>
+                                <th class="p-4 text-right">Valor</th>
+                                <th class="p-4 text-center">Ações</th>
+                            </tr>
                         </thead>
                         <tbody id="lista-corpo" class="divide-y divide-slate-100">
-                            <tr id="msg-vazia"><td colspan="3" class="p-12 text-center text-slate-400">Nenhum boleto carregado.</td></tr>
+                            <tr id="msg-vazia"><td colspan="4" class="p-10 text-center text-slate-400">Nenhum dado processado.</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="bg-brand-600 rounded-2xl shadow-xl p-8 text-white flex flex-col items-center text-center h-fit">
-                <h3 class="text-xs uppercase tracking-[0.2em] font-bold opacity-80 mb-2">Total Geral</h3>
-                <span id="total-geral" class="text-4xl font-black">R$ 0,00</span>
+            <div class="space-y-4">
+                <div class="bg-brand-600 rounded-2xl p-6 text-white text-center shadow-xl">
+                    <p class="text-xs font-bold opacity-70 uppercase mb-1">Soma Total</p>
+                    <h2 id="total-geral" class="text-3xl font-black">R$ 0,00</h2>
+                </div>
+                <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm text-xs text-slate-500">
+                    <p class="font-bold text-slate-700 mb-2">Resumo da Leitura:</p>
+                    <ul class="space-y-1">
+                        <li>✅ Suporta .jpg, .png, .pdf</li>
+                        <li>✅ Identifica Cedentes automaticamente</li>
+                        <li>✅ Extrai data de vencimento</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </main>
 
     <script>
-        let totalAcumulado = 0;
-        let listaDados = [];
+        let boletos = [];
 
         const fileInput = document.getElementById('file-input');
         const listaCorpo = document.getElementById('lista-corpo');
         const totalGeral = document.getElementById('total-geral');
-        const uploadUI = document.getElementById('upload-ui');
-        const progressUI = document.getElementById('progress-ui');
         const progressBar = document.getElementById('progress-bar');
         const progressPercent = document.getElementById('progress-percent');
-        const currentFileName = document.getElementById('current-file-name');
-        const countBadge = document.getElementById('count-badge');
+        const progressUI = document.getElementById('progress-ui');
+        const uploadUI = document.getElementById('upload-ui');
 
         fileInput.addEventListener('change', async (e) => {
             const files = Array.from(e.target.files);
@@ -111,77 +98,121 @@
 
             uploadUI.classList.add('hidden');
             progressUI.classList.remove('hidden');
-            
-            let processados = 0;
-            for (let file of files) {
-                if (file.type !== 'application/pdf') continue;
-                processados++;
-                const percent = Math.round((processados / files.length) * 100);
+
+            for (let i = 0; i < files.length; i++) {
+                const percent = Math.round(((i + 1) / files.length) * 100);
                 progressBar.style.width = `${percent}%`;
                 progressPercent.innerText = `${percent}%`;
-                currentFileName.innerText = `Lendo: ${file.name}`;
-                await processarPDF(file);
+                
+                await processarArquivo(files[i]);
             }
 
             setTimeout(() => {
-                progressUI.classList.add('hidden');
                 uploadUI.classList.remove('hidden');
+                progressUI.classList.add('hidden');
                 progressBar.style.width = '0%';
                 fileInput.value = "";
             }, 1000);
         });
 
-        async function processarPDF(file) {
-            try {
-                const arrayBuffer = await file.arrayBuffer();
-                const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
-                const page = await pdf.getPage(1);
-                const textContent = await page.getTextContent();
-                let text = textContent.items.map(i => i.str).join(" ");
-                let metodo = "Texto Direto";
+        async function processarArquivo(file) {
+            let text = "";
+            let metodo = "Texto";
 
-                if (text.trim().length < 15) {
-                    metodo = "OCR (Imagem)";
-                    text = await realizarOCR(page);
+            try {
+                if (file.type === 'application/pdf') {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+                    const page = await pdf.getPage(1);
+                    const textContent = await page.getTextContent();
+                    text = textContent.items.map(i => i.str).join(" | ");
+
+                    if (text.trim().length < 20) {
+                        text = await realizarOCR(page, true);
+                        metodo = "OCR";
+                    }
+                } else if (file.type.startsWith('image/')) {
+                    text = await realizarOCR(file, false);
+                    metodo = "Imagem";
                 }
 
-                const valor = extrairValor(text);
-                adicionarResultado(file.name, valor, metodo);
+                const dados = extrairDadosBoletos(text);
+                dados.id = Date.now() + Math.random();
+                dados.arquivo = file.name;
+                
+                boletos.push(dados);
+                renderizarTabela();
             } catch (err) {
-                adicionarResultado(file.name, 0, "Erro");
+                console.error("Erro ao processar:", err);
             }
         }
 
-        async function realizarOCR(pdfPage) {
-            const viewport = pdfPage.getViewport({ scale: 2.0 });
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-            await pdfPage.render({ canvasContext: context, viewport: viewport }).promise;
-            
+        async function realizarOCR(source, isPdfPage) {
+            let imageSource;
+            if (isPdfPage) {
+                const viewport = source.getViewport({ scale: 2.0 });
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                await source.render({ canvasContext: context, viewport: viewport }).promise;
+                imageSource = canvas;
+            } else {
+                imageSource = source;
+            }
+
             const worker = await Tesseract.createWorker('por');
-            const { data: { text } } = await worker.recognize(canvas);
+            const { data: { text } } = await worker.recognize(imageSource);
             await worker.terminate();
             return text;
         }
 
-        function extrairValor(text) {
+        function extrairDadosBoletos(text) {
             const clean = text.replace(/\s+/g, ' ');
+            
+            // 1. Extrair Valor (Prioridade Linha Digitável do seu PDF Banestes)
+            let valor = 0;
             const regLinha = /\d{5}[\.\s]?\d{5}.*?(\d{14})/;
             const matchLinha = clean.match(regLinha);
-            if (matchLinha) return parseInt(matchLinha[1].slice(-10), 10) / 100;
+            if (matchLinha) {
+                valor = parseInt(matchLinha[1].slice(-10), 10) / 100;
+            } else {
+                const matchPreco = clean.match(/(\d{1,3}(\.\d{3})*,\d{2})|(\d+\.\d{2})/);
+                if (matchPreco) valor = parseMoeda(matchPreco[0]);
+            }
 
-            const labels = ["Valor Documento", "Valor", "Total"];
+            // 2. Extrair Vencimento (Padrão 15/01/2026 do seu arquivo)
+            let vencimento = "Não encontrado";
+            const regData = /(\d{2}\/\d{2}\/\d{4})/;
+            const matchDatas = clean.match(new RegExp(regData, 'g'));
+            if (matchDatas) {
+                // Geralmente a data de vencimento é a última data mencionada ou após a palavra 'Vencimento'
+                const vPos = clean.toLowerCase().indexOf('vencimento');
+                if (vPos !== -1) {
+                    const trecho = clean.substring(vPos, vPos + 50);
+                    const vMatch = trecho.match(regData);
+                    if (vMatch) vencimento = vMatch[1];
+                } else {
+                    vencimento = matchDatas[0];
+                }
+            }
+
+            // 3. Extrair Beneficiário (Cedente)
+            let beneficiario = "Desconhecido";
+            const labels = ["Cedente", "Beneficiário", "Razão Social"];
             for (let l of labels) {
                 const pos = clean.toLowerCase().indexOf(l.toLowerCase());
                 if (pos !== -1) {
-                    const trecho = clean.substring(pos, pos + 100);
-                    const preco = trecho.match(/(\d{1,3}(\.\d{3})*,\d{2})|(\d+\.\d{2})/);
-                    if (preco) return parseMoeda(preco[0]);
+                    // Pega o texto logo após o rótulo até o próximo divisor '|' ou campo
+                    const trecho = clean.substring(pos + l.length, pos + 60).replace(/[:|]/g, '').trim();
+                    if (trecho.length > 3) {
+                        beneficiario = trecho.split('  ')[0]; // Pega a primeira parte se houver muitos espaços
+                        break;
+                    }
                 }
             }
-            return 0;
+
+            return { valor, vencimento, beneficiario };
         }
 
         function parseMoeda(s) {
@@ -189,33 +220,58 @@
             return parseFloat(s.replace(',', '.'));
         }
 
-        function adicionarResultado(nome, valor, metodo) {
-            if (document.getElementById('msg-vazia')) document.getElementById('msg-vazia').remove();
-            totalAcumulado += valor;
-            listaDados.push({ "Arquivo": nome, "Valor": valor, "Método": metodo });
-            countBadge.innerText = listaDados.length;
-            totalGeral.innerText = totalAcumulado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td class="p-4 text-slate-700 font-medium truncate max-w-[200px]">${nome}</td>
-                <td class="p-4 text-center"><span class="px-2 py-1 rounded-md text-[10px] font-bold uppercase ${metodo === 'Texto Direto' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}">${metodo}</span></td>
-                <td class="p-4 text-right font-mono font-bold">${valor === 0 ? '---' : valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-            `;
-            listaCorpo.prepend(tr);
+        function renderizarTabela() {
+            if (boletos.length === 0) {
+                listaCorpo.innerHTML = '<tr id="msg-vazia"><td colspan="4" class="p-10 text-center text-slate-400">Nenhum dado processado.</td></tr>';
+                totalGeral.innerText = "R$ 0,00";
+                return;
+            }
+
+            listaCorpo.innerHTML = "";
+            let soma = 0;
+
+            boletos.forEach(b => {
+                soma += b.valor;
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition group";
+                tr.innerHTML = `
+                    <td class="p-4">
+                        <div class="font-bold text-slate-700">${b.beneficiario}</div>
+                        <div class="text-[10px] text-slate-400 truncate w-32">${b.arquivo}</div>
+                    </td>
+                    <td class="p-4 text-slate-600 font-medium">${b.vencimento}</td>
+                    <td class="p-4 text-right font-mono font-bold text-brand-600">${formatBRL(b.valor)}</td>
+                    <td class="p-4 text-center">
+                        <button onclick="removerBoleto(${b.id})" class="text-slate-300 hover:text-red-500 transition-colors p-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                    </td>
+                `;
+                listaCorpo.prepend(tr);
+            });
+
+            totalGeral.innerText = formatBRL(soma);
         }
 
-        function limparTudo() {
-            totalAcumulado = 0; listaDados = [];
-            countBadge.innerText = "0"; totalGeral.innerText = "R$ 0,00";
-            listaCorpo.innerHTML = '<tr id="msg-vazia"><td colspan="3" class="p-12 text-center text-slate-400">Nenhum boleto carregado.</td></tr>';
+        function removerBoleto(id) {
+            boletos = boletos.filter(b => b.id !== id);
+            renderizarTabela();
         }
+
+        function formatBRL(v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
 
         function exportarExcel() {
-            if (listaDados.length === 0) return alert("Nada para exportar!");
-            const ws = XLSX.utils.json_to_sheet(listaDados);
+            if (boletos.length === 0) return alert("Adicione dados primeiro!");
+            const formatados = boletos.map(b => ({
+                "Beneficiário": b.beneficiario,
+                "Vencimento": b.vencimento,
+                "Valor": b.valor,
+                "Arquivo": b.arquivo
+            }));
+            const ws = XLSX.utils.json_to_sheet(formatados);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Boletos");
-            XLSX.writeFile(wb, "Soma_Boletos.xlsx");
+            XLSX.writeFile(wb, "Relatorio_Boletos.xlsx");
         }
     </script>
 </body>
