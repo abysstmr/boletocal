@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Somador de Boletos Pro Max</title>
+    <title>Somador de Boletos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -18,7 +18,7 @@
     <nav class="bg-brand-900 text-white shadow-lg p-4">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
             <h1 class="text-xl font-bold flex items-center gap-2">
-                <span class="bg-brand-500 p-1.5 rounded text-white">📑</span> Somador Pro Max
+                <span class="bg-brand-500 p-1.5 rounded text-white">📑</span> Somador 
             </h1>
             <button onclick="exportarExcel()" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2">
                 📥 Exportar Excel
@@ -170,7 +170,7 @@
         function extrairDadosBoletos(text) {
             const clean = text.replace(/\s+/g, ' ');
             
-            // 1. Extrair Valor (Prioridade Linha Digitável do seu PDF Banestes)
+            
             let valor = 0;
             const regLinha = /\d{5}[\.\s]?\d{5}.*?(\d{14})/;
             const matchLinha = clean.match(regLinha);
@@ -197,16 +197,15 @@
                 }
             }
 
-            // 3. Extrair Beneficiário (Cedente)
             let beneficiario = "Desconhecido";
             const labels = ["Cedente", "Beneficiário", "Razão Social"];
             for (let l of labels) {
                 const pos = clean.toLowerCase().indexOf(l.toLowerCase());
                 if (pos !== -1) {
-                    // Pega o texto logo após o rótulo até o próximo divisor '|' ou campo
+                    
                     const trecho = clean.substring(pos + l.length, pos + 60).replace(/[:|]/g, '').trim();
                     if (trecho.length > 3) {
-                        beneficiario = trecho.split('  ')[0]; // Pega a primeira parte se houver muitos espaços
+                        beneficiario = trecho.split('  ')[0]; 
                         break;
                     }
                 }
@@ -276,3 +275,4 @@
     </script>
 </body>
 </html>
+
